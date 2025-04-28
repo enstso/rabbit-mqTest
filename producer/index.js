@@ -8,19 +8,42 @@ async function produce() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
+    const queue = "company_topic";
 
-    const message = "Hello, RabbitMQ!";
+    // messages to be sent
+    const messages = [
+      {
+        routingKey: "france.department.rh",
+        message: "Le salarié 1 a 2000€ (department)",
+      },
+      {
+        routingKey: "uk.department.hr",
+        message: "Employee 1 has 2000$ (department)",
+      },
+      {
+        routingKey: "france.department",
+        message: "paie du mois (france and department)",
+      },
+      {
+        routingKey: "uk.department",
+        message: "pay of month (uk and department)",
+      },
+      { routingKey: "all.department.all", message: "all department (department)" },
+    ];
 
-    await channel.assertQueue(queue, {
-      durable: true,
+    // check if the exchange exists
+    await channel.assertExchange(queue, "topic", {
+      durable: false,
     });
 
-    channel.sendToQueue(queue, Buffer.from(message), {
-      persistent: true,
-    });
+    // publish messages to the exchange
+    for (let msg of messages) {
+      channel.publish(queue, msg.routingKey, Buffer.from(msg.message), {
+        persistent: false,
+      });
+      console.log("Message sent: %s", msg.message);
+    }
 
-    console.log("Message sent: %s", message);
 
     setTimeout(() => {
       channel.close();
