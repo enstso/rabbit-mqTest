@@ -7,12 +7,14 @@ async function consume() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
+    const queue = "prefetch_queue";
 
     // Create a queue
     await channel.assertQueue(queue, {
       durable: true,
     });
+
+    await channel.prefetch(3);
 
     // Consume messages
     console.log("Waiting for messages...");
@@ -20,9 +22,10 @@ async function consume() {
       queue,
       (msg) => {
         console.log("Received: %s", msg.content.toString());
+        channel.ack(msg);
       },
       {
-        noAck: true,
+        noAck: false,
       }
     );
   } catch (err) {

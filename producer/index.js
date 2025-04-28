@@ -8,17 +8,17 @@ async function produce() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
-
-    const message = "Hello, RabbitMQ!";
-
+    const queue = "prefetch_queue";
+    const message = "Hello nb:";
     await channel.assertQueue(queue, {
       durable: true,
     });
 
-    channel.sendToQueue(queue, Buffer.from(message), {
-      persistent: true,
-    });
+    for (let i = 0; i < 10000; i++) {
+      channel.sendToQueue(queue, Buffer.from(message + i), {
+        persistent: false,
+      });
+    }
 
     console.log("Message sent: %s", message);
 
