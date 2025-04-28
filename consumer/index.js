@@ -8,23 +8,42 @@ async function consume() {
     const channel = await connection.createChannel();
 
     const exchange = "lang_exchange";
-    const queue = "direct_queue";
-    const routingKey = "lang.en"; // This is the routing key used to bind the queue to the exchange
+    
+    const queue1 = "direct_queue_en"; // This is the queue name for English messages
+    const queue2 = "direct_queue_fr"; // This is the queue name for French messages
+
+    const routingKeyEn = "lang.en"; // This is the routing key used to bind the queue to the exchange
+    const routingKeyFr = "lang.fr"; // This is the routing key used to bind the queue to the exchange
 
     // Create an exchange
     await channel.assertExchange(exchange, "direct", { durable: false });
+    
+    // Create a queues
+    await channel.assertQueue(queue1, { durable: false });
+    await channel.assertQueue(queue2, { durable: false });
 
-    // Create a queue
-    await channel.assertQueue(queue, { durable: false });
+    // Bind the queues to the exchange with the routing keys
+    await channel.bindQueue(queue1, exchange, routingKeyEn);
+    await channel.bindQueue(queue2, exchange, routingKeyFr);
 
-    await channel.bindQueue(queue, exchange, routingKey);
-
-    console.log("Waiting for messages in queue:", queue);
+    console.log("Waiting for messages in queues:");
 
     channel.consume(
-      queue,
+      queue1,
       (msg) => {
-        console.log("Received: %s", msg.content.toString());
+        console.log("Received from routingKey en: %s", msg.content.toString());
+        // Acknowledge the message
+        channel.ack(msg);
+      },
+      {
+        noAck: false,
+      }
+    );
+
+    channel.consume(
+      queue2,
+      (msg) => {
+        console.log("Received from routingKey fr: %s", msg.content.toString());
         // Acknowledge the message
         channel.ack(msg);
       },

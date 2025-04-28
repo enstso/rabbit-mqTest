@@ -10,17 +10,26 @@ async function produce() {
 
     // Define the exchange and routing key
     const exchange = "lang_exchange";
-    const routingKey = "lang.en"; // This is the routing key used to bind the queue to the exchange
-    const message = "Hello, i speak English!";
+    const routingKeyEn = "lang.en"; // This is the routing key used to bind the queue to the exchange
+    const routiongKeyFr = "lang.fr"; // This is the routing key used to bind the queue to the exchange
+
+    const messageEn = "Hello, i speak English!";
+    const messageFr = "Bonjour, je parle français!";
 
     await channel.assertExchange(exchange, "direct", { durable: false });
 
-    // Publish a message to the exchange with the routing key
-    await channel.publish(exchange, routingKey, Buffer.from(message), {
+    // publish messages to the exchange with the routing keys
+    // The messages will be sent to the queues bound to the exchange with the corresponding routing keys
+    channel.publish(exchange, routingKeyEn, Buffer.from(messageEn), {
       persistent: false,
     });
 
-    console.log("Message sent: %s", message);
+    channel.publish(exchange, routiongKeyFr, Buffer.from(messageFr), {
+      persistent: false,
+    });
+
+    console.log("Message En sent: %s", messageEn);
+    console.log("Message Fr sent: %s", messageFr);
 
     setTimeout(() => {
       channel.close();
