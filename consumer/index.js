@@ -7,22 +7,29 @@ async function consume() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
+    const exchange = "lang_exchange";
+    const queue = "direct_queue";
+    const routingKey = "lang.en"; // This is the routing key used to bind the queue to the exchange
+
+    // Create an exchange
+    await channel.assertExchange(exchange, "direct", { durable: false });
 
     // Create a queue
-    await channel.assertQueue(queue, {
-      durable: true,
-    });
+    await channel.assertQueue(queue, { durable: false });
 
-    // Consume messages
-    console.log("Waiting for messages...");
+    await channel.bindQueue(queue, exchange, routingKey);
+
+    console.log("Waiting for messages in queue:", queue);
+
     channel.consume(
       queue,
       (msg) => {
         console.log("Received: %s", msg.content.toString());
+        // Acknowledge the message
+        channel.ack(msg);
       },
       {
-        noAck: true,
+        noAck: false,
       }
     );
   } catch (err) {

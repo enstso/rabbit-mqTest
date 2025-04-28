@@ -8,16 +8,16 @@ async function produce() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
+    // Define the exchange and routing key
+    const exchange = "lang_exchange";
+    const routingKey = "lang.en"; // This is the routing key used to bind the queue to the exchange
+    const message = "Hello, i speak English!";
 
-    const message = "Hello, RabbitMQ!";
+    await channel.assertExchange(exchange, "direct", { durable: false });
 
-    await channel.assertQueue(queue, {
-      durable: true,
-    });
-
-    channel.sendToQueue(queue, Buffer.from(message), {
-      persistent: true,
+    // Publish a message to the exchange with the routing key
+    await channel.publish(exchange, routingKey, Buffer.from(message), {
+      persistent: false,
     });
 
     console.log("Message sent: %s", message);
