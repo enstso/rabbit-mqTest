@@ -37,7 +37,7 @@ services:
       - NODE_ENV=${NODE_ENV}
     depends_on:
       - rabbitmq
-    entrypoint: ["wait-for-it", "${RABBITMQ_HOST}:${RABBITMQ_PORT}", "--", "node", "index.js"]
+    entrypoint: ["wait-for-it", "nodejs-consumer:3000", "--", "node", "index.js"]
 
 volumes:
   rabbitmq_data:

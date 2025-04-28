@@ -8,15 +8,14 @@ async function produce() {
     const connection = await amqp.connect(rabbitmqUrl);
     const channel = await connection.createChannel();
 
-    const queue = "test_queue";
+    const exchange = "fanout_exchange";
+    const message = "Hello, fanout";
 
-    const message = "Hello, RabbitMQ!";
+    // declare the exchange
+    await channel.assertExchange(exchange, "fanout", { durable: true });
 
-    await channel.assertQueue(queue, {
-      durable: true,
-    });
-
-    channel.sendToQueue(queue, Buffer.from(message), {
+    // Publish a message to the exchange
+    channel.publish(exchange,"", Buffer.from(message), {
       persistent: true,
     });
 
